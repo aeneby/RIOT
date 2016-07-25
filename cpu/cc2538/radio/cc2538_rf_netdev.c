@@ -28,7 +28,7 @@
 #include "cc2538_rf_netdev.h"
 #include "cc2538_rf_internal.h"
 
-#define ENABLE_DEBUG        (0)
+#define ENABLE_DEBUG        (1)
 #include "debug.h"
 
 #define _MAX_MHR_OVERHEAD   (25)
@@ -297,6 +297,14 @@ static int _recv(netdev2_t *netdev, char *buf, int len, void *info)
     mutex_lock(&dev->mutex);
 
     if (buf == NULL) {
+
+        /* Dump RX FIFO */
+        DEBUG("cc2538_rf: RX FIFO is ");
+        for (int i = 0; i < RFCORE_XREG_RXFIFOCNT; i++) {
+            DEBUG("%02lx", *(uint32_t *)(0x40088000 + 4 * i));
+            DEBUG(i + 1 == RFCORE_XREG_RXFIFOCNT ? "\n" : ":");
+        }
+
         /* GNRC wants to know how much data we've got for it */
         pkt_len = rfcore_read_byte();
 
