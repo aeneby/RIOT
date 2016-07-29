@@ -302,7 +302,7 @@ static int _recv(netdev2_t *netdev, char *buf, int len, void *info)
         DEBUG("cc2538_rf: RX FIFO is ");
         for (int i = 0; i < RFCORE_XREG_RXFIFOCNT; i++) {
             DEBUG("%02lx", *(uint32_t *)(0x40088000 + 4 * i));
-            DEBUG(i + 1 == RFCORE_XREG_RXFIFOCNT ? "\n" : ":");
+            DEBUG(i + 1 == RFCORE_XREG_RXFIFOCNT ? "\n" : " ");
         }
 
         /* GNRC wants to know how much data we've got for it */
