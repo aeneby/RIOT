@@ -2,6 +2,7 @@
 #include <unistd.h>
 
 #include "msg.h"
+#include "xtimer.h"
 #include "net/gnrc/netif.h"
 #include "net/gnrc/netapi.h"
 #include "net/gnrc/netif/hdr.h"
@@ -16,6 +17,10 @@
 
 #define AUTOACK                 NETOPT_ENABLE
 #define ACK_REQ                 NETOPT_DISABLE
+
+#define PKT_COUNT               (10U)
+#define PKT_DELAY               (1000000U)
+
 
 int main(void)
 {
@@ -58,32 +63,35 @@ int main(void)
 
     char *data = DATA;
     data_len = strlen(data);
-    if (data_len == 0) {
-        pkt = NULL;
-    }
-    else {
-        pkt = gnrc_pktbuf_add(NULL, data, data_len, GNRC_NETTYPE_UNDEF);
-        if (pkt == NULL) {
+
+    for (int i = 0; i < PKT_COUNT; i++) {
+        if (data_len == 0) {
+            pkt = NULL;
+        }
+        else {
+            pkt = gnrc_pktbuf_add(NULL, data, data_len, GNRC_NETTYPE_UNDEF);
+            if (pkt == NULL) {
+                puts("error: packet buffer full");
+                return 1;
+            }
+        }
+        hdr = gnrc_netif_hdr_build(NULL, 0, dst_l2addr, l2addr_len);
+        if (hdr == NULL) {
             puts("error: packet buffer full");
+            gnrc_pktbuf_release(pkt);
             return 1;
         }
-    }
-    hdr = gnrc_netif_hdr_build(NULL, 0, dst_l2addr, l2addr_len);
-    if (hdr == NULL) {
-        puts("error: packet buffer full");
-        gnrc_pktbuf_release(pkt);
-        return 1;
-    }
-    LL_PREPEND(pkt, hdr);
-    nethdr = (gnrc_netif_hdr_t *)hdr->data;
-    nethdr->flags = flags;
+        LL_PREPEND(pkt, hdr);
+        nethdr = (gnrc_netif_hdr_t *)hdr->data;
+        nethdr->flags = flags;
 
-    while (1) {
         if (gnrc_netapi_send(dev, pkt) < 1) {
             puts("error: unable to send\n");
             gnrc_pktbuf_release(pkt);
             return 1;
         }
+
+        xtimer_usleep(PKT_DELAY);
     }
 
     /* main thread exits */

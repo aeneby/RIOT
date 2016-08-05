@@ -19,6 +19,8 @@ USEMODULE += auto_init_gnrc_netif
 # Use minimal standard PRNG
 #USEMODULE += prng_minstd
 
+USEMODULE += xtimer
+
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1
 
